@@ -40,7 +40,7 @@ const data = [
     clientPort: 'djuGSjnd:60001/adnrei:53292',
     rebootType: 'local/commander',
     modemSignal: '-63db/-12db',
-    lifeTime: '5d16h32m',
+    lifeTime: '5d12h32m',
   },
 ];
 
@@ -90,7 +90,12 @@ export const PaymentTable = () => {
   const [columns, setColumns] = useState(initialColumns);
   const [dropTarget, setDropTarget] = useState(null);
   const [visibleColumns, setVisibleColumns] = useState(visibleColumnsInit);
-
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: 'ascending',
+  });
+  // Функция скрытия колонок
   const toggleColumnVisibility = (column) => {
     setVisibleColumns({
       ...visibleColumns,
@@ -109,16 +114,16 @@ export const PaymentTable = () => {
 
     setColumns(updatedColumns);
   };
-
+  // Выбор колонки для перетаскивания
   const onDragStart = (e, columnName) => {
     e.dataTransfer.setData('text/plain', columnName);
   };
-
+  // Эфект при нажатии на колонку
   const onDragOver = (e, targetColumnName) => {
     e.preventDefault();
     setDropTarget(targetColumnName);
   };
-
+  // Выбор колонки куда перетаскиваем
   const onDrop = (e, targetColumnName) => {
     const sourceColumnName = e.dataTransfer.getData('text/plain');
     const sourceColumn = columns.find((col) => col.name === sourceColumnName);
@@ -133,6 +138,7 @@ export const PaymentTable = () => {
       setDropTarget(null);
     }
   };
+  // Функция определяющая цвет лампочки по статусу
   const getStatusBadge = (status) => {
     if (status === 'online') {
       return <div className='indicator-status green' />;
@@ -146,8 +152,56 @@ export const PaymentTable = () => {
     return null;
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSort = (columnName) => {
+    const direction =
+      sortConfig.key === columnName && sortConfig.direction === 'ascending'
+        ? 'descending'
+        : 'ascending';
+
+    setSortConfig({ key: columnName, direction });
+  };
+
+  const sortedData = data.sort((a, b) => {
+    if (sortConfig.direction === 'ascending') {
+      const valueA = a[sortConfig.key] || '';
+      const valueB = b[sortConfig.key] || '';
+
+      if (isNaN(valueA) || isNaN(valueB)) {
+        return valueA.localeCompare(valueB);
+      } else {
+        return Number(valueA) - Number(valueB);
+      }
+    } else if (sortConfig.direction === 'descending') {
+      const valueA = a[sortConfig.key] || '';
+      const valueB = b[sortConfig.key] || '';
+
+      if (isNaN(valueA) || isNaN(valueB)) {
+        return valueB.localeCompare(valueA);
+      } else {
+        return Number(valueB) - Number(valueA);
+      }
+    }
+  });
+
+  const filteredData = sortedData.filter((item) => {
+    return item.ip.includes(searchQuery);
+  });
+
   return (
     <div className='table-container'>
+      <div className='search-container'>
+        <input
+          type='text'
+          placeholder='Search by IP...'
+          value={searchQuery}
+          onChange={handleSearchChange}
+          className='search-input'
+        />
+      </div>
       <div className='column-toggle'>
         <h3>Columns</h3>
         <ul>
@@ -180,19 +234,24 @@ export const PaymentTable = () => {
                       onDragOver={(e) => onDragOver(e, col.name)}
                       onDrop={(e) => onDrop(e, col.name)}
                       className={`table__th ${dropTarget === col.name ? 'drop-target' : ''}`}
-                      onClick={() => console.log(col)}
+                      onClick={() => handleSort(col.name)}
                     >
                       {col.name}
+                      {sortConfig.key === col.name && (
+                        <span>
+                          {sortConfig.direction === 'ascending' ? ' 🔽' : ' 🔼'}
+                        </span>
+                      )}
                     </th>
                   )
               )}
           </tr>
         </thead>
         <tbody>
-          {data.map((item) => (
+          {filteredData.map((item) => (
             <tr key={item.id} className='table__tr'>
               {columns
-                .sort((a, b) => a.order - b.order) // Сортировка колонок
+                .sort((a, b) => a.order - b.order)
                 .map(
                   (col) =>
                     visibleColumns[col.name] && (
