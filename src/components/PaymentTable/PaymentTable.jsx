@@ -1,48 +1,6 @@
 import { useState } from 'react';
 import './PaymentTable.css';
-
-const data = [
-  {
-    status: 'reserved',
-    id: '1',
-    ip: '10.30.20.40',
-    externalIp: '10.10.0.1',
-    routerModel: 'Meizu',
-    location: 'М/C/D/6.1',
-    phoneNumber: '79651234567',
-    operator: 'MTS',
-    serverConnectionType: 'WG/GRE/Local/',
-    web_log: 'admin:password',
-    ssh_log: 'admin:password',
-    modemAmount: '1/2/3/4',
-    modemModel: 'Huawei 3372-153h/Meiglink 838/',
-    modemWebIp: '192.168.0.1/router_interface',
-    clientPort: 'djuGSjnd:60001/adnrei:53292',
-    rebootType: 'local/commander',
-    modemSignal: '-63db/-12db',
-    lifeTime: '5d16h32m',
-  },
-  {
-    status: 'online',
-    id: '2',
-    ip: '10.20.30.40',
-    externalIp: '10.10.0.1',
-    routerModel: 'TP-Link',
-    location: 'М/C/D/6.1 или Москва, Дубнинская, д.11',
-    phoneNumber: '79651234567',
-    operator: 'MTS',
-    serverConnectionType: 'WG/GRE/Local/',
-    web_log: 'admin:password',
-    ssh_log: 'admin:password',
-    modemAmount: '1/2/3/4',
-    modemModel: 'Huawei 3372-153h/Meiglink 838/',
-    modemWebIp: '192.168.0.1/router_interface',
-    clientPort: 'djuGSjnd:60001/adnrei:53292',
-    rebootType: 'local/commander',
-    modemSignal: '-63db/-12db',
-    lifeTime: '5d12h32m',
-  },
-];
+import { data } from '../../assets/constants/dataTable';
 
 export const PaymentTable = () => {
   const visibleColumnsInit = {
@@ -65,7 +23,6 @@ export const PaymentTable = () => {
     modemSignal: false,
     lifeTime: false,
   };
-
   const initialColumns = [
     { name: 'status', order: 0 },
     { name: 'id', order: 1 },
@@ -86,7 +43,7 @@ export const PaymentTable = () => {
     { name: 'modemSignal', order: 16 },
     { name: 'lifeTime', order: 17 },
   ];
-
+  const [isVisible, setIsVisible] = useState(false);
   const [columns, setColumns] = useState(initialColumns);
   const [dropTarget, setDropTarget] = useState(null);
   const [visibleColumns, setVisibleColumns] = useState(visibleColumnsInit);
@@ -95,6 +52,10 @@ export const PaymentTable = () => {
     key: null,
     direction: 'ascending',
   });
+  // ФУНКЦИЯ ОТКРЫТИЯ ЗАКРЫТИЯ КОЛОНОК
+  const toggleButtonColumnVisible = () => {
+    isVisible ? setIsVisible(false) : setIsVisible(true);
+  };
   // Функция скрытия колонок
   const toggleColumnVisibility = (column) => {
     setVisibleColumns({
@@ -151,11 +112,7 @@ export const PaymentTable = () => {
     }
     return null;
   };
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
+  // СОРТИРОВКА ПО АЛФАВИТУ
   const handleSort = (columnName) => {
     const direction =
       sortConfig.key === columnName && sortConfig.direction === 'ascending'
@@ -164,7 +121,6 @@ export const PaymentTable = () => {
 
     setSortConfig({ key: columnName, direction });
   };
-
   const sortedData = data.sort((a, b) => {
     if (sortConfig.direction === 'ascending') {
       const valueA = a[sortConfig.key] || '';
@@ -186,86 +142,127 @@ export const PaymentTable = () => {
       }
     }
   });
-
+  // ФУНЦИЯ ПОИСКА СРЕДИ IP
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
   const filteredData = sortedData.filter((item) => {
     return item.ip.includes(searchQuery);
   });
 
+  //ПАГИНАЦИЯ СТРАНИЦ
+  const [currentPage, setCurrentPage] = useState(1); // Текущая страница
+  const itemsPerPage = 15; // Количество строк на странице
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   return (
-    <div className='table-container'>
-      <div className='search-container'>
-        <input
-          type='text'
-          placeholder='Search by IP...'
-          value={searchQuery}
-          onChange={handleSearchChange}
-          className='search-input'
-        />
-      </div>
-      <div className='column-toggle'>
-        <h3>Columns</h3>
-        <ul>
-          {Object.keys(visibleColumnsInit).map((column) => (
-            <li key={column}>
-              <label>
-                <input
-                  type='checkbox'
-                  checked={visibleColumns[column]}
-                  onChange={() => toggleColumnVisibility(column)}
-                />
-                {column}
-              </label>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <table className='table'>
-        <thead className='table__head'>
-          <tr className='table__tr'>
-            {columns
-              .sort((a, b) => a.order - b.order) // Сортировка колонок
-              .map(
-                (col) =>
-                  visibleColumns[col.name] && (
-                    <th
-                      key={col.name}
-                      draggable={true}
-                      onDragStart={(e) => onDragStart(e, col.name)}
-                      onDragOver={(e) => onDragOver(e, col.name)}
-                      onDrop={(e) => onDrop(e, col.name)}
-                      className={`table__th ${dropTarget === col.name ? 'drop-target' : ''}`}
-                      onClick={() => handleSort(col.name)}
-                    >
-                      {col.name}
-                      {sortConfig.key === col.name && (
-                        <span>
-                          {sortConfig.direction === 'ascending' ? ' 🔽' : ' 🔼'}
-                        </span>
-                      )}
-                    </th>
-                  )
-              )}
-          </tr>
-        </thead>
-        <tbody>
-          {filteredData.map((item) => (
-            <tr key={item.id} className='table__tr'>
+    <div className='payment-table'>
+      <nav className='payment-table__nav'>
+        <div className='payment-table__search-container'>
+          <input
+            type='text'
+            placeholder='Search by IP...'
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className='payment-table__search-input'
+          />
+        </div>
+        <div className='payment-table__column-toggle'>
+          <button
+            className='payment-table__burger'
+            onClick={toggleButtonColumnVisible}
+          >
+            Columns
+          </button>
+          <ul
+            className={`payment-table__columns ${isVisible ? 'payment-table__columns_visible' : ''}`}
+          >
+            {Object.keys(visibleColumnsInit).map((column) => (
+              <li key={column} className='payment-table__list'>
+                <label>
+                  <input
+                    type='checkbox'
+                    checked={visibleColumns[column]}
+                    onChange={() => toggleColumnVisibility(column)}
+                  />
+                  {column}
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
+      <div className='payment-table__table'>
+        <table className='table'>
+          <thead className='table__head'>
+            <tr className='table__tr'>
               {columns
-                .sort((a, b) => a.order - b.order)
+                .sort((a, b) => a.order - b.order) // Сортировка колонок
                 .map(
                   (col) =>
                     visibleColumns[col.name] && (
-                      <td key={`${col.name}-${item.id}`} className='table__td'>
-                        {col.name === 'status'
-                          ? getStatusBadge(item[col.name])
-                          : item[col.name]}
-                      </td>
+                      <th
+                        key={col.name}
+                        draggable={true}
+                        onDragStart={(e) => onDragStart(e, col.name)}
+                        onDragOver={(e) => onDragOver(e, col.name)}
+                        onDrop={(e) => onDrop(e, col.name)}
+                        className={`table__th ${dropTarget === col.name ? 'drop-target' : ''}`}
+                        onClick={() => handleSort(col.name)}
+                      >
+                        {col.name}
+                        {sortConfig.key === col.name && (
+                          <span>
+                            {sortConfig.direction === 'ascending'
+                              ? ' 🔽'
+                              : ' 🔼'}
+                          </span>
+                        )}
+                      </th>
                     )
                 )}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className='table__body'>
+            {currentItems.map((item) => (
+              <tr key={item.id} className='table__tr'>
+                {columns
+                  .sort((a, b) => a.order - b.order)
+                  .map(
+                    (col) =>
+                      visibleColumns[col.name] && (
+                        <td
+                          key={`${col.name}-${item.id}`}
+                          className='table__td'
+                        >
+                          {col.name === 'status'
+                            ? getStatusBadge(item[col.name])
+                            : item[col.name]}
+                        </td>
+                      )
+                  )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className='pagination'>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            className={`pagination__btn ${currentPage === page ? 'pagination__btn_active' : ''}`}
+            onClick={() => paginate(page)}
+          >
+            {page}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

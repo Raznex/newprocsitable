@@ -1,14 +1,100 @@
-.table-container {
+.payment-table {
     display: flex;
     flex-direction: column;
+    align-items: start;
+    margin: 50px 200px;
+}
+
+.payment-table__column-toggle {
+    position: relative;
+}
+
+.payment-table__nav {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
     align-items: center;
-    max-width: 1100px;
+    padding: 15px 0;
+}
+
+.payment-table__columns {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 220px;
+    position: absolute;
+    background-color: #e7f5ff;
+    border-radius: 15px;
+    right: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.payment-table__columns_visible {
+    max-height: 600px;
+}
+
+.payment-table__list {
+    padding: 0 10px;
+}
+.payment-table__list:first-child{
+    padding-top: 10px;
+}
+.payment-table__list:last-child {
+    padding-bottom: 10px;
+}
+
+.payment-table__burger {
+    background-color: transparent;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 1px solid blue;
+    font-size: 24px;
+    color: blue;
+    cursor: pointer;
+    transition: background-color 0.4s;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.payment-table__burger::before,
+.payment-table__burger::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 0;
+    height: 100%;
+    background-color: blue;
+    transition: width 0.3s;
+    z-index: -1;
+}
+
+.payment-table__burger::before {
+    left: 0;
+}
+
+.payment-table__burger::after {
+    right: 0;
+}
+
+.payment-table__burger:hover::before {
+    width: 100%; /* Двигаем блок слева направо */
+}
+
+
+.payment-table__burger:hover {
+    color: white; /* Меняем цвет текста на белый при наведении */
+}
+
+.payment-table__table {
+    height: 740px;
+    width: 1100px;
     overflow-x: auto;
 }
 
 .table {
-    max-width: 1100px;
-    overflow-x: auto;
     width: 100%;
     border-collapse: collapse;
     min-width: 100%;
@@ -16,6 +102,10 @@
 
 .table__head {
     background-color: #f2f2f2;
+}
+
+.table__body {
+    width: 100%;
 }
 
 .table__th, .table__td {
@@ -56,6 +146,29 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
+}
+
+.pagination {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    padding: 10px 0;
+    gap: 5px;
+}
+
+.pagination__btn {
+    width: 28px;
+    font-size: 16px;
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.pagination__btn_active {
+    background-color: #cee6ff;
+    border: none
 }
 
 .green {
